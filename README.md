@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eko Telehealth — Admin Console
 
-## Getting Started
+Next.js admin website for the Eko Telehealth virtual care marketplace. Covers
+the admin duties named in the pitch: provider ID verification, two-way review
+moderation, and oversight of users and appointments — in the same warm,
+card-based design language as the mobile app.
 
-First, run the development server:
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The console runs entirely on mock data until a backend is configured, so every
+flow is demoable out of the box.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Going live
 
-## Learn More
+1. Copy `.env.example` to `.env.local`.
+2. Set `NEXT_PUBLIC_API_URL` to the backend base URL and
+   `NEXT_PUBLIC_USE_MOCK_API=false`.
+3. Every function in `src/lib/api.ts` documents the backend route it calls —
+   implement those under `/admin/*` and the console goes live without UI
+   changes. Admin authentication is a TODO flagged in the same file.
 
-To learn more about Next.js, take a look at the following resources:
+## Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/               # Routes: dashboard, providers, reviews, users, appointments
+├── components/        # Sidebar + shared card/badge/table primitives
+└── lib/               # Types, mock data, API client (mock ↔ live switch)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy like any Next.js app (Vercel is the shortest path — see the
+integration guide PDF).

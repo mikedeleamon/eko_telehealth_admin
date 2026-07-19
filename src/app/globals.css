@@ -1,26 +1,39 @@
 @import "tailwindcss";
 
+/*
+ * Eko Telehealth design language (see pitch deck):
+ * warm card-based system, fully rounded, soft shadows, Poppins,
+ * bright accents (#6C5CE7) over pastel card fills.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7fb;
+  --foreground: #1a1a3e;
+  --accent: #6c5ce7;
+  --green: #3fbe6e;
+  --red: #f0392b;
+  --orange: #f5a623;
+  --card-blue: #e8f4fd;
+  --card-pink: #fde8ec;
+  --card-yellow: #fffde7;
+  --card-purple: #efecfd;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-accent: var(--accent);
+  --color-green: var(--green);
+  --color-red: var(--red);
+  --color-orange: var(--orange);
+  --color-card-blue: var(--card-blue);
+  --color-card-pink: var(--card-pink);
+  --color-card-yellow: var(--card-yellow);
+  --color-card-purple: var(--card-purple);
+  --font-sans: var(--font-poppins);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), sans-serif;
 }

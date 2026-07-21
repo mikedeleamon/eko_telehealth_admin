@@ -2,6 +2,8 @@ import type {
   AdminAppointment,
   AdminUser,
   DashboardStats,
+  PlatformSettings,
+  PromoCode,
   ProviderApplication,
   Review,
 } from "./types";
@@ -11,9 +13,22 @@ export const MOCK_STATS: DashboardStats = {
   activeProviders: 96,
   appointmentsThisWeek: 214,
   revenueThisMonth: "₦4,820,000",
+  vatCollected: "₦612,000",
   pendingVerifications: 4,
   pendingReviews: 3,
 };
+
+export const MOCK_PLATFORM_SETTINGS: PlatformSettings = {
+  serviceChargePct: 0,
+  commissionPct: 0.175,
+  vatPct: 0.075,
+};
+
+export const MOCK_PROMO_CODES: PromoCode[] = [
+  { id: "promo-1", code: "SAVE20", kind: "percent", value: 0.2, minSpend: 0, maxRedemptions: null, perUserLimit: 1, expiresAt: null, active: true, redemptions: 37 },
+  { id: "promo-2", code: "WELCOME2000", kind: "flat", value: 2000, minSpend: 10000, maxRedemptions: 50, perUserLimit: 1, expiresAt: null, active: true, redemptions: 12 },
+  { id: "promo-3", code: "LAUNCH2025", kind: "percent", value: 0.3, minSpend: 0, maxRedemptions: 100, perUserLimit: 1, expiresAt: "2025-12-31T23:59:59.000Z", active: false, redemptions: 100 },
+];
 
 export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
   {

@@ -5,6 +5,8 @@
  */
 import {
   MOCK_ADMIN_APPOINTMENTS,
+  MOCK_PLATFORM_SETTINGS,
+  MOCK_PROMO_CODES,
   MOCK_PROVIDER_APPLICATIONS,
   MOCK_REVIEWS,
   MOCK_STATS,
@@ -14,6 +16,8 @@ import type {
   AdminAppointment,
   AdminUser,
   DashboardStats,
+  PlatformSettings,
+  PromoCode,
   ProviderApplication,
   Review,
 } from "./types";
@@ -84,5 +88,48 @@ export const api = {
   async appointments(): Promise<AdminAppointment[]> {
     if (USE_MOCK) return delay().then(() => MOCK_ADMIN_APPOINTMENTS);
     return request("/admin/appointments");
+  },
+
+  /** GET /admin/settings — the platform's fee-schedule rates. */
+  async settings(): Promise<PlatformSettings> {
+    if (USE_MOCK) return delay().then(() => MOCK_PLATFORM_SETTINGS);
+    return request("/admin/settings");
+  },
+
+  /** PATCH /admin/settings */
+  async updateSettings(rates: PlatformSettings): Promise<PlatformSettings> {
+    if (USE_MOCK) return delay(200).then(() => rates);
+    return request("/admin/settings", { method: "PATCH", body: JSON.stringify(rates) });
+  },
+
+  /** GET /admin/promos */
+  async promos(): Promise<PromoCode[]> {
+    if (USE_MOCK) return delay().then(() => [...MOCK_PROMO_CODES]);
+    return request("/admin/promos");
+  },
+
+  /** POST /admin/promos */
+  async createPromo(input: Omit<PromoCode, "id" | "redemptions">): Promise<PromoCode> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const created: PromoCode = { ...input, id: `promo-${Date.now()}`, redemptions: 0 };
+        MOCK_PROMO_CODES.push(created);
+        return created;
+      });
+    }
+    return request("/admin/promos", { method: "POST", body: JSON.stringify(input) });
+  },
+
+  /** PATCH /admin/promos/:id — the usual edit is toggling `active`. */
+  async updatePromo(id: string, input: Partial<Omit<PromoCode, "id" | "redemptions">>): Promise<PromoCode> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const idx = MOCK_PROMO_CODES.findIndex((p) => p.id === id);
+        if (idx === -1) throw new Error("Promo not found");
+        MOCK_PROMO_CODES[idx] = { ...MOCK_PROMO_CODES[idx], ...input };
+        return MOCK_PROMO_CODES[idx];
+      });
+    }
+    return request(`/admin/promos/${id}`, { method: "PATCH", body: JSON.stringify(input) });
   },
 };

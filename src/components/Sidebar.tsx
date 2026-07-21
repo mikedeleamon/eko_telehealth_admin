@@ -9,6 +9,8 @@ const NAV = [
   { href: "/reviews", label: "Review Moderation", icon: "★" },
   { href: "/users", label: "Users", icon: "👤" },
   { href: "/appointments", label: "Appointments", icon: "📅" },
+  { href: "/promos", label: "Promo Codes", icon: "🏷" },
+  { href: "/settings", label: "Fee Settings", icon: "⚙" },
 ];
 
 const USE_MOCK =

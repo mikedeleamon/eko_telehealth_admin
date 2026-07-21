@@ -33,6 +33,10 @@ export default function DashboardPage() {
           <p className="text-3xl font-bold">{stats?.revenueThisMonth ?? "—"}</p>
           <p className="text-sm text-foreground/55 mt-1">Revenue this month</p>
         </Card>
+        <Card>
+          <p className="text-3xl font-bold">{stats?.vatCollected ?? "—"}</p>
+          <p className="text-sm text-foreground/55 mt-1">VAT collected (owed, not revenue)</p>
+        </Card>
       </div>
 
       <div className="grid xl:grid-cols-3 gap-5 mb-8">

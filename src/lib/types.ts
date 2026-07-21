@@ -17,6 +17,14 @@ export interface ProviderApplication {
   /** Gov ID, email & phone — the three checks named in the pitch. */
   checks: { govId: boolean; email: boolean; phone: boolean };
   status: VerificationStatus;
+  /** The bookable doctors row id, once approval has created one. Undefined until then. */
+  doctorId?: string;
+  /**
+   * Admin-granted in-home care privilege (task 2.3) — only meaningful once
+   * doctorId is set. Undefined (not false) when there's no linked doctor row
+   * yet, so the UI can distinguish "not applicable" from "off".
+   */
+  canProvideInHome?: boolean;
 }
 
 export type ReviewStatus = "pending" | "published" | "removed";
@@ -62,6 +70,7 @@ export interface DashboardStats {
   vatCollected: string;
   pendingVerifications: number;
   pendingReviews: number;
+  pendingComplaints: number;
 }
 
 /**
@@ -76,6 +85,27 @@ export interface PlatformSettings {
   commissionPct: number;
   /** Patient-borne VAT, added on top — only applied to Video Visit. */
   vatPct: number;
+}
+
+export type ComplaintCategory = "billing" | "appointment" | "provider" | "technical" | "other";
+export type ComplaintStatus = "pending" | "resolved" | "dismissed";
+
+/**
+ * A report a patient or doctor filed via the app's Settings → Report a
+ * Problem (task 2.1). A trackable alternative to a static "contact us" —
+ * this has a real lifecycle the admin manages and the filer sees resolved.
+ */
+export interface Complaint {
+  id: string;
+  authorName: string;
+  accountType: "Patient" | "Doctor";
+  category: ComplaintCategory;
+  subject: string;
+  description: string;
+  appointmentId?: string;
+  status: ComplaintStatus;
+  resolutionNote?: string;
+  submittedAt: string;
 }
 
 /**

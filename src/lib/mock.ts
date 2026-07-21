@@ -1,6 +1,7 @@
 import type {
   AdminAppointment,
   AdminUser,
+  Complaint,
   DashboardStats,
   PlatformSettings,
   PromoCode,
@@ -16,6 +17,7 @@ export const MOCK_STATS: DashboardStats = {
   vatCollected: "₦612,000",
   pendingVerifications: 4,
   pendingReviews: 3,
+  pendingComplaints: 2,
 };
 
 export const MOCK_PLATFORM_SETTINGS: PlatformSettings = {
@@ -71,6 +73,21 @@ export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
     checks: { govId: true, email: true, phone: true },
     status: "pending",
   },
+  // Already-approved, with a linked bookable doctor — so the in-home care
+  // toggle (task 2.3) has something to demo. Mirrors the mobile app's
+  // MOCK_DOCTORS id '1' (Amara Okafor), which is seeded canProvideInHome: true.
+  {
+    id: "v5",
+    name: "Dr. Amara Okafor MD",
+    type: "Doctor",
+    specialty: "Primary Care",
+    location: "Victoria Island, Lagos",
+    submittedAt: "Jan 8, 2026",
+    checks: { govId: true, email: true, phone: true },
+    status: "approved",
+    doctorId: "1",
+    canProvideInHome: true,
+  },
 ];
 
 export const MOCK_REVIEWS: Review[] = [
@@ -103,6 +120,40 @@ export const MOCK_REVIEWS: Review[] = [
     text: "Call started 25 minutes late and was cut short. Contact me at 0803-XXX-XXXX to discuss.",
     submittedAt: "Jul 2, 2026",
     status: "pending",
+  },
+];
+
+export const MOCK_COMPLAINTS: Complaint[] = [
+  {
+    id: "c1",
+    authorName: "Martin Doe",
+    accountType: "Patient",
+    category: "billing",
+    subject: "Charged twice for the same visit",
+    description: "I was charged twice on my card for my July 18 video visit with Dr. Okafor. Please refund the duplicate charge.",
+    status: "pending",
+    submittedAt: "Jul 19, 2026",
+  },
+  {
+    id: "c2",
+    authorName: "Emeka Obi",
+    accountType: "Patient",
+    category: "provider",
+    subject: "Doctor was 25 minutes late",
+    description: "My appointment was scheduled for 2:00 PM but the doctor didn't join the call until 2:25 PM with no notice.",
+    status: "pending",
+    submittedAt: "Jul 15, 2026",
+  },
+  {
+    id: "c3",
+    authorName: "Dr. Chinedu Eze",
+    accountType: "Doctor",
+    category: "technical",
+    subject: "Video call kept freezing",
+    description: "The video kept freezing every couple of minutes during a consultation and we had to finish over audio only.",
+    status: "resolved",
+    resolutionNote: "Traced to a CDN region issue on our video provider's side, resolved as of Jul 12.",
+    submittedAt: "Jul 10, 2026",
   },
 ];
 

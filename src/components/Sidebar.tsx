@@ -7,6 +7,7 @@ const NAV = [
   { href: "/", label: "Dashboard", icon: "▦" },
   { href: "/providers", label: "Provider Verification", icon: "✓" },
   { href: "/reviews", label: "Review Moderation", icon: "★" },
+  { href: "/complaints", label: "Reports & Complaints", icon: "⚑" },
   { href: "/users", label: "Users", icon: "👤" },
   { href: "/appointments", label: "Appointments", icon: "📅" },
   { href: "/promos", label: "Promo Codes", icon: "🏷" },

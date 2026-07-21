@@ -39,7 +39,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid xl:grid-cols-3 gap-5 mb-8">
+      <div className="grid xl:grid-cols-4 gap-5 mb-8">
         <Link href="/providers">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <div className="flex items-center justify-between">
@@ -59,6 +59,17 @@ export default function DashboardPage() {
                 <p className="text-sm text-foreground/55">Two-way, admin-moderated</p>
               </div>
               <span className="text-2xl font-bold text-orange">{stats?.pendingReviews ?? "—"}</span>
+            </div>
+          </Card>
+        </Link>
+        <Link href="/complaints">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold">Reports & complaints</p>
+                <p className="text-sm text-foreground/55">Filed by patients & doctors</p>
+              </div>
+              <span className="text-2xl font-bold text-red">{stats?.pendingComplaints ?? "—"}</span>
             </div>
           </Card>
         </Link>

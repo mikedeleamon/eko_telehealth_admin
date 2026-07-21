@@ -5,6 +5,7 @@
  */
 import {
   MOCK_ADMIN_APPOINTMENTS,
+  MOCK_COMPLAINTS,
   MOCK_PLATFORM_SETTINGS,
   MOCK_PROMO_CODES,
   MOCK_PROVIDER_APPLICATIONS,
@@ -15,6 +16,7 @@ import {
 import type {
   AdminAppointment,
   AdminUser,
+  Complaint,
   DashboardStats,
   PlatformSettings,
   PromoCode,
@@ -61,6 +63,17 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ decision }),
     });
+  },
+
+  /** PATCH /admin/doctors/:id — toggle a bookable provider's in-home care privilege. */
+  async updateDoctorInHome(doctorId: string, canProvideInHome: boolean): Promise<void> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const app = MOCK_PROVIDER_APPLICATIONS.find((a) => a.doctorId === doctorId);
+        if (app) app.canProvideInHome = canProvideInHome;
+      });
+    }
+    await request(`/admin/doctors/${doctorId}`, { method: "PATCH", body: JSON.stringify({ canProvideInHome }) });
   },
 
   /** GET /admin/reviews?status=pending */
@@ -131,5 +144,28 @@ export const api = {
       });
     }
     return request(`/admin/promos/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  },
+
+  /** GET /admin/complaints?status=pending */
+  async complaints(): Promise<Complaint[]> {
+    if (USE_MOCK) return delay().then(() => MOCK_COMPLAINTS.filter((c) => c.status === "pending"));
+    return request("/admin/complaints?status=pending");
+  },
+
+  /** POST /admin/complaints/:id/decision */
+  async decideComplaint(id: string, decision: "resolved" | "dismissed", resolutionNote?: string): Promise<void> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const complaint = MOCK_COMPLAINTS.find((c) => c.id === id);
+        if (complaint) {
+          complaint.status = decision;
+          complaint.resolutionNote = resolutionNote;
+        }
+      });
+    }
+    return request(`/admin/complaints/${id}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ decision, resolutionNote }),
+    });
   },
 };

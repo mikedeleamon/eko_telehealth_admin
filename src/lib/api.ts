@@ -6,6 +6,8 @@
 import {
   MOCK_ADMIN_APPOINTMENTS,
   MOCK_COMPLAINTS,
+  MOCK_CONTENT_BLOCKS,
+  MOCK_CURRENCIES,
   MOCK_PLATFORM_SETTINGS,
   MOCK_PROMO_CODES,
   MOCK_PROVIDER_APPLICATIONS,
@@ -17,6 +19,8 @@ import type {
   AdminAppointment,
   AdminUser,
   Complaint,
+  ContentBlock,
+  Currency,
   DashboardStats,
   PlatformSettings,
   PromoCode,
@@ -56,13 +60,66 @@ export const api = {
     return request("/admin/providers/applications");
   },
 
-  /** POST /admin/providers/applications/:id/decision */
+  /**
+   * POST /admin/providers/applications/:id/decision — mirrors the real
+   * backend: Doctor/Nurse/Therapist approvals create a live doctors entity
+   * (Batch 3 Phase 2), a Pharmacy approval creates a directory pharmacies
+   * entity (Phase 3), Lab/Clinic still don't have one yet. Previously this
+   * mock branch didn't mutate anything, so the UI's own optimistic overlay
+   * was silently covering for it — now that overlay is gone, the mock has
+   * to actually update state itself.
+   */
   async decideProvider(id: string, decision: "approved" | "rejected"): Promise<void> {
-    if (USE_MOCK) return delay(200);
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const app = MOCK_PROVIDER_APPLICATIONS.find((a) => a.id === id);
+        if (!app) return;
+        app.status = decision;
+        const isAppointmentType = app.type === "Doctor" || app.type === "Nurse" || app.type === "Therapist";
+        if (decision === "approved" && isAppointmentType && !app.doctorId) {
+          app.doctorId = `mock-doctor-${app.id}`;
+          // Nurse's primary modality is Home Visit — grant the privilege on
+          // approval, same as the real backend's createEntityForApproval.
+          app.canProvideInHome = app.type === "Nurse";
+        }
+        if (decision === "approved" && app.type === "Pharmacy" && !app.pharmacyId) {
+          app.pharmacyId = `mock-pharmacy-${app.id}`;
+          app.pharmacyActive = true;
+        }
+      });
+    }
     return request(`/admin/providers/applications/${id}/decision`, {
       method: "POST",
       body: JSON.stringify({ decision }),
     });
+  },
+
+  /** PATCH /admin/pharmacies/:id — toggle a directory pharmacy active/inactive. */
+  async updatePharmacyActive(pharmacyId: string, active: boolean): Promise<void> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const app = MOCK_PROVIDER_APPLICATIONS.find((a) => a.pharmacyId === pharmacyId);
+        if (app) app.pharmacyActive = active;
+      });
+    }
+    await request(`/admin/pharmacies/${pharmacyId}`, { method: "PATCH", body: JSON.stringify({ active }) });
+  },
+
+  /**
+   * PATCH /admin/providers/applications/:id/checks — set the 3 verification
+   * booleans. Partial patch — pass only the ones being changed.
+   */
+  async updateProviderChecks(
+    id: string,
+    checks: Partial<{ govId: boolean; email: boolean; phone: boolean }>,
+  ): Promise<void> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const app = MOCK_PROVIDER_APPLICATIONS.find((a) => a.id === id);
+        if (app) app.checks = { ...app.checks, ...checks };
+      });
+    }
+    await request(`/admin/providers/applications/${id}/checks`, { method: "PATCH", body: JSON.stringify(checks) });
   },
 
   /** PATCH /admin/doctors/:id — toggle a bookable provider's in-home care privilege. */
@@ -95,6 +152,28 @@ export const api = {
   async users(): Promise<AdminUser[]> {
     if (USE_MOCK) return delay().then(() => MOCK_USERS);
     return request("/admin/users");
+  },
+
+  /** PATCH /admin/users/:id/gov-id — approve or reject a submitted gov-ID document. */
+  async updateUserGovId(id: string, status: "verified" | "rejected"): Promise<void> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const user = MOCK_USERS.find((u) => u.id === id);
+        if (user) user.govId = { ...user.govId, status };
+      });
+    }
+    await request(`/admin/users/${id}/gov-id`, { method: "PATCH", body: JSON.stringify({ status }) });
+  },
+
+  /** PATCH /admin/users/:id — suspend or reactivate a patient/provider account. */
+  async updateUserStatus(id: string, status: "active" | "suspended"): Promise<void> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const user = MOCK_USERS.find((u) => u.id === id);
+        if (user) user.status = status;
+      });
+    }
+    await request(`/admin/users/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
   },
 
   /** GET /admin/appointments */
@@ -167,5 +246,55 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ decision, resolutionNote }),
     });
+  },
+
+  /** GET /admin/currencies — every display currency, including inactive ones. */
+  async currencies(): Promise<Currency[]> {
+    if (USE_MOCK) return delay().then(() => [...MOCK_CURRENCIES]);
+    return request("/admin/currencies");
+  },
+
+  /** POST /admin/currencies */
+  async createCurrency(input: Omit<Currency, "id">): Promise<Currency> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const created: Currency = { ...input, id: `cur-${Date.now()}` };
+        MOCK_CURRENCIES.push(created);
+        return created;
+      });
+    }
+    return request("/admin/currencies", { method: "POST", body: JSON.stringify(input) });
+  },
+
+  /** PATCH /admin/currencies/:id — the usual edit is a rate refresh or toggling `active`. */
+  async updateCurrency(id: string, input: Partial<Omit<Currency, "id">>): Promise<Currency> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const idx = MOCK_CURRENCIES.findIndex((c) => c.id === id);
+        if (idx === -1) throw new Error("Currency not found");
+        MOCK_CURRENCIES[idx] = { ...MOCK_CURRENCIES[idx], ...input };
+        return MOCK_CURRENCIES[idx];
+      });
+    }
+    return request(`/admin/currencies/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  },
+
+  /** GET /admin/content — every content block, for the editor list. */
+  async content(): Promise<ContentBlock[]> {
+    if (USE_MOCK) return delay().then(() => [...MOCK_CONTENT_BLOCKS]);
+    return request("/admin/content");
+  },
+
+  /** PATCH /admin/content/:key — edit a block's title/body. */
+  async updateContent(key: string, input: { title?: string; body?: string }): Promise<ContentBlock> {
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        const idx = MOCK_CONTENT_BLOCKS.findIndex((c) => c.key === key);
+        if (idx === -1) throw new Error("Content block not found");
+        MOCK_CONTENT_BLOCKS[idx] = { ...MOCK_CONTENT_BLOCKS[idx], ...input, updatedAt: new Date().toISOString() };
+        return MOCK_CONTENT_BLOCKS[idx];
+      });
+    }
+    return request(`/admin/content/${key}`, { method: "PATCH", body: JSON.stringify(input) });
   },
 };

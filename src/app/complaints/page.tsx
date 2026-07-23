@@ -52,7 +52,7 @@ export default function ComplaintsPage() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <p className="font-semibold">{complaint.subject}</p>
                       <Badge variant="accent">{CATEGORY_LABEL[complaint.category]}</Badge>
-                      <Badge variant={complaint.accountType === "Doctor" ? "orange" : "gray"}>{complaint.accountType}</Badge>
+                      <Badge variant={complaint.accountType !== "Patient" ? "orange" : "gray"}>{complaint.accountType}</Badge>
                     </div>
                     <p className="text-sm text-foreground/55 mt-1">{complaint.authorName} · Submitted {complaint.submittedAt}</p>
                     <p className="text-sm text-foreground/70 mt-2 leading-relaxed">{complaint.description}</p>

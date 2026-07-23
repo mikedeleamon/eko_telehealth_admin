@@ -3,9 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { APPOINTMENT_STATUS_BADGE_VARIANT } from "@/lib/types";
 import { Badge, Card, LoadingRows, PageHeader, StatusDot } from "@/components/ui";
 
-const FILTERS = ["all", "upcoming", "completed", "cancelled"] as const;
+const FILTERS = ["all", "upcoming", "checked_in", "completed", "no_show", "cancelled"] as const;
 
 export default function AppointmentsPage() {
   const { data } = useQuery({ queryKey: ["appointments"], queryFn: api.appointments });
@@ -26,7 +27,7 @@ export default function AppointmentsPage() {
               filter === f ? "bg-accent text-white" : "bg-white text-foreground/60 hover:bg-card-purple"
             }`}
           >
-            {f}
+            {f.replace("_", " ")}
           </button>
         ))}
       </div>
@@ -58,8 +59,8 @@ export default function AppointmentsPage() {
                   <td className="py-3 text-foreground/60">{a.date}</td>
                   <td className="py-3 font-semibold">{a.fee}</td>
                   <td className="py-3">
-                    <Badge variant={a.status === "upcoming" ? "accent" : a.status === "completed" ? "green" : "red"}>
-                      {a.status}
+                    <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[a.status] ?? "gray"}>
+                      {a.status.replace("_", " ")}
                     </Badge>
                   </td>
                 </tr>

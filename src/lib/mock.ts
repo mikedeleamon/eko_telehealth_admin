@@ -2,6 +2,8 @@ import type {
   AdminAppointment,
   AdminUser,
   Complaint,
+  ContentBlock,
+  Currency,
   DashboardStats,
   PlatformSettings,
   PromoCode,
@@ -32,6 +34,40 @@ export const MOCK_PROMO_CODES: PromoCode[] = [
   { id: "promo-3", code: "LAUNCH2025", kind: "percent", value: 0.3, minSpend: 0, maxRedemptions: 100, perUserLimit: 1, expiresAt: "2025-12-31T23:59:59.000Z", active: false, redemptions: 100 },
 ];
 
+export const MOCK_CURRENCIES: Currency[] = [
+  { id: "cur-1", code: "NGN", symbol: "₦", ngnRate: 1, active: true },
+  { id: "cur-2", code: "USD", symbol: "$", ngnRate: 1600, active: true },
+  { id: "cur-3", code: "GBP", symbol: "£", ngnRate: 2000, active: true },
+  { id: "cur-4", code: "EUR", symbol: "€", ngnRate: 1750, active: true },
+];
+
+export const MOCK_CONTENT_BLOCKS: ContentBlock[] = [
+  {
+    key: "about_mission",
+    title: "Our Mission",
+    body: "Eko Telehealth connects patients with licensed, verified doctors for video, clinic, and home visits — bringing quality healthcare within reach, wherever you are.",
+    updatedAt: "2026-01-08T09:00:00.000Z",
+  },
+  {
+    key: "about_contact",
+    title: "Contact Us",
+    body: "Have a question or need help? Reach our support team at support@ekotelehealth.com, or use \"Report a Problem\" in Settings to file a trackable request.",
+    updatedAt: "2026-01-08T09:00:00.000Z",
+  },
+  {
+    key: "terms_of_service",
+    title: "Terms of Service",
+    body: "By using Eko Telehealth, you agree to receive care from licensed providers subject to their own professional obligations, to provide accurate information during registration and consultations, and to use the platform only for its intended purpose of arranging and conducting telehealth visits. Eko Telehealth is a marketplace connecting patients and providers; it does not itself practice medicine. Full terms are available on request from support@ekotelehealth.com.",
+    updatedAt: "2026-01-08T09:00:00.000Z",
+  },
+  {
+    key: "privacy_policy",
+    title: "Privacy Policy",
+    body: "Eko Telehealth collects the information needed to provide care: your account details, appointment history, and any medical information you or your provider add to your record. This information is shared only with providers you consult and is never sold. You can request a copy or deletion of your data at any time via support@ekotelehealth.com.",
+    updatedAt: "2026-01-08T09:00:00.000Z",
+  },
+];
+
 export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
   {
     id: "v1",
@@ -42,6 +78,24 @@ export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
     submittedAt: "Jul 3, 2026",
     checks: { govId: true, email: true, phone: true },
     status: "pending",
+    documents: [
+      {
+        key: "mock/kelechi-license.pdf",
+        fileName: "MDCN License 2026.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 482_000,
+        uploadedAt: "2026-07-03T09:12:00.000Z",
+        url: "https://example.com/mock/kelechi-license.pdf",
+      },
+      {
+        key: "mock/kelechi-id.jpg",
+        fileName: "National ID.jpg",
+        mimeType: "image/jpeg",
+        sizeBytes: 1_240_000,
+        uploadedAt: "2026-07-03T09:13:00.000Z",
+        url: "https://example.com/mock/kelechi-id.jpg",
+      },
+    ],
   },
   {
     id: "v2",
@@ -52,6 +106,7 @@ export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
     submittedAt: "Jul 2, 2026",
     checks: { govId: true, email: true, phone: false },
     status: "pending",
+    documents: [],
   },
   {
     id: "v3",
@@ -62,6 +117,7 @@ export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
     submittedAt: "Jul 1, 2026",
     checks: { govId: false, email: true, phone: true },
     status: "pending",
+    documents: [],
   },
   {
     id: "v4",
@@ -72,6 +128,7 @@ export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
     submittedAt: "Jun 30, 2026",
     checks: { govId: true, email: true, phone: true },
     status: "pending",
+    documents: [],
   },
   // Already-approved, with a linked bookable doctor — so the in-home care
   // toggle (task 2.3) has something to demo. Mirrors the mobile app's
@@ -87,6 +144,7 @@ export const MOCK_PROVIDER_APPLICATIONS: ProviderApplication[] = [
     status: "approved",
     doctorId: "1",
     canProvideInHome: true,
+    documents: [],
   },
 ];
 
@@ -158,12 +216,13 @@ export const MOCK_COMPLAINTS: Complaint[] = [
 ];
 
 export const MOCK_USERS: AdminUser[] = [
-  { id: "u1", name: "Martin Doe", email: "martin@ekotelehealth.com", accountType: "Patient", joined: "Feb 12, 2026", status: "active" },
-  { id: "u2", name: "Dr. Amara Okafor", email: "a.okafor@ekotelehealth.com", accountType: "Doctor", joined: "Jan 8, 2026", status: "active" },
-  { id: "u3", name: "Ngozi Nwosu", email: "ngozi.n@gmail.com", accountType: "Patient", joined: "Mar 3, 2026", status: "active" },
-  { id: "u4", name: "Dr. Chinedu Eze", email: "c.eze@ekotelehealth.com", accountType: "Doctor", joined: "Jan 22, 2026", status: "active" },
-  { id: "u5", name: "Tunde Bakare", email: "tunde.b@yahoo.com", accountType: "Patient", joined: "Apr 17, 2026", status: "suspended" },
-  { id: "u6", name: "Emeka Obi", email: "emeka.obi@gmail.com", accountType: "Patient", joined: "May 2, 2026", status: "active" },
+  { id: "u1", name: "Martin Doe", email: "martin@ekotelehealth.com", accountType: "Patient", joined: "Feb 12, 2026", status: "active", govId: { status: "none" } },
+  { id: "u2", name: "Dr. Amara Okafor", email: "a.okafor@ekotelehealth.com", accountType: "Doctor", joined: "Jan 8, 2026", status: "active", govId: { status: "verified", fileName: "MDCN-license.jpg" } },
+  { id: "u3", name: "Ngozi Nwosu", email: "ngozi.n@gmail.com", accountType: "Patient", joined: "Mar 3, 2026", status: "active", govId: { status: "pending", fileName: "national-id.jpg", url: "https://example.com/mock/ngozi-id.jpg" } },
+  { id: "u4", name: "Dr. Chinedu Eze", email: "c.eze@ekotelehealth.com", accountType: "Doctor", joined: "Jan 22, 2026", status: "active", govId: { status: "none" } },
+  { id: "u5", name: "Tunde Bakare", email: "tunde.b@yahoo.com", accountType: "Patient", joined: "Apr 17, 2026", status: "suspended", govId: { status: "none" } },
+  { id: "u6", name: "Emeka Obi", email: "emeka.obi@gmail.com", accountType: "Patient", joined: "May 2, 2026", status: "active", govId: { status: "none" } },
+  { id: "u7", name: "Adaeze Okoro", email: "adaeze.okoro@ekotelehealth.com", accountType: "Provider", joined: "Jul 1, 2026", status: "active", govId: { status: "none" } },
 ];
 
 export const MOCK_ADMIN_APPOINTMENTS: AdminAppointment[] = [

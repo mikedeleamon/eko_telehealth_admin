@@ -15,6 +15,17 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+/** Communication / Experience / Speedy Response breakdown, when the review has one. */
+function DimensionBreakdown({ review }: { review: Review }) {
+  const { communicationRating, experienceRating, speedyResponseRating } = review;
+  if (!communicationRating || !experienceRating || !speedyResponseRating) return null;
+  return (
+    <p className="text-xs text-foreground/40 mt-1">
+      Communication {communicationRating} · Experience {experienceRating} · Speedy Response {speedyResponseRating}
+    </p>
+  );
+}
+
 export default function ReviewsPage() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["reviews"], queryFn: api.reviews });
@@ -56,6 +67,7 @@ export default function ReviewsPage() {
                       </Badge>
                       <Stars rating={review.rating} />
                     </div>
+                    <DimensionBreakdown review={review} />
                     <p className="text-sm text-foreground/70 mt-2 leading-relaxed">“{review.text}”</p>
                     <p className="text-xs text-foreground/40 mt-2">Submitted {review.submittedAt}</p>
                   </div>

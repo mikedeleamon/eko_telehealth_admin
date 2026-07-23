@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { APPOINTMENT_STATUS_BADGE_VARIANT } from "@/lib/types";
 import { Badge, Card, LoadingRows, PageHeader, StatusDot } from "@/components/ui";
 
 export default function DashboardPage() {
@@ -112,8 +113,8 @@ export default function DashboardPage() {
                   </td>
                   <td className="py-3 text-foreground/60">{a.date}</td>
                   <td className="py-3">
-                    <Badge variant={a.status === "upcoming" ? "accent" : a.status === "completed" ? "green" : "red"}>
-                      {a.status}
+                    <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[a.status] ?? "gray"}>
+                      {a.status.replace("_", " ")}
                     </Badge>
                   </td>
                 </tr>

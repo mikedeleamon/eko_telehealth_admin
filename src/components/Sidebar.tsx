@@ -11,6 +11,8 @@ const NAV = [
   { href: "/users", label: "Users", icon: "👤" },
   { href: "/appointments", label: "Appointments", icon: "📅" },
   { href: "/promos", label: "Promo Codes", icon: "🏷" },
+  { href: "/currencies", label: "Display Currencies", icon: "💱" },
+  { href: "/content", label: "Content", icon: "📝" },
   { href: "/settings", label: "Fee Settings", icon: "⚙" },
 ];
 

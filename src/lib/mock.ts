@@ -1,5 +1,7 @@
 import type {
   AdminAppointment,
+  AdminPayout,
+  AdminPrescription,
   AdminUser,
   Complaint,
   ContentBlock,
@@ -8,6 +10,7 @@ import type {
   PlatformSettings,
   PromoCode,
   ProviderApplication,
+  RedactedMessage,
   Review,
 } from "./types";
 
@@ -181,6 +184,29 @@ export const MOCK_REVIEWS: Review[] = [
   },
 ];
 
+export const MOCK_REDACTED_MESSAGES: RedactedMessage[] = [
+  {
+    id: "rm1",
+    conversationId: "conv-1",
+    senderName: "Dr. James Whitfield",
+    senderAccountType: "Doctor",
+    counterpartyName: "Dr. James Whitfield",
+    maskedText: "Happy to keep seeing you — just reach me directly on [contact details removed], it's faster.",
+    originalText: "Happy to keep seeing you — just reach me directly on 0803 456 7890, it's faster.",
+    sentAt: "2026-07-24T09:14:00.000Z",
+  },
+  {
+    id: "rm2",
+    conversationId: "conv-2",
+    senderName: "Ngozi Nwosu",
+    senderAccountType: "Patient",
+    counterpartyName: "Dr. Amara Okafor",
+    maskedText: "Can you send the referral to [contact details removed] instead?",
+    originalText: "Can you send the referral to ngozi.nwosu@gmail.com instead?",
+    sentAt: "2026-07-23T16:02:00.000Z",
+  },
+];
+
 export const MOCK_COMPLAINTS: Complaint[] = [
   {
     id: "c1",
@@ -231,4 +257,17 @@ export const MOCK_ADMIN_APPOINTMENTS: AdminAppointment[] = [
   { id: "a3", patient: "Ngozi Nwosu", provider: "Dr. Funmilayo Adeyemi", type: "Video Visit", date: "Jul 5, 2026 · 11:00 AM", fee: "₦28,000", status: "completed" },
   { id: "a4", patient: "Yusuf Ibrahim", provider: "Nurse Adaeze Okoro", type: "Home Visit", date: "Jul 4, 2026 · 9:00 AM", fee: "₦18,000", status: "completed" },
   { id: "a5", patient: "Tunde Bakare", provider: "Dr. Aisha Bello", type: "Video Visit", date: "Jul 3, 2026 · 3:00 PM", fee: "₦20,000", status: "cancelled" },
+];
+
+export const MOCK_PAYOUTS: AdminPayout[] = [
+  { id: "po1", provider: "Dr. Amara Okafor", amount: "₦124,000", rail: "flutterwave_bank", status: "paid", destination: "GTBank ••••4321", reference: "eko-payout-a1", providerReference: "FLW-88213", requestedAt: "Jul 22, 2026" },
+  { id: "po2", provider: "Dr. Chinedu Eze", amount: "₦58,500", rail: "flutterwave_bank", status: "processing", destination: "Zenith Bank ••••7788", reference: "eko-payout-b2", providerReference: "FLW-88240", requestedAt: "Jul 23, 2026" },
+  { id: "po3", provider: "Dr. Priya Nair", amount: "₦96,000", rail: "paypal", status: "failed", destination: "p.nair@example.com", reference: "eko-payout-c3", failureReason: "RECEIVER_UNREGISTERED — the recipient has no PayPal account for that email.", sent: "USD 60.00", requestedAt: "Jul 23, 2026" },
+];
+
+export const MOCK_ADMIN_PRESCRIPTIONS: AdminPrescription[] = [
+  { id: "rx1", drug: "Amlodipine 10 mg", form: "Tablet", quantity: "30", instructions: "Take one tablet daily in the morning.", prescribedBy: "Dr. Amara Okafor", datePrescribed: "Jul 23, 2026", pharmacy: "GreenCross Pharmacy", fulfillmentStatus: "sent" },
+  { id: "rx2", drug: "Metformin 500 mg", form: "Tablet", quantity: "60", prescribedBy: "Dr. Chinedu Eze", datePrescribed: "Jul 22, 2026", pharmacy: "MedPlus Pharmacy", fulfillmentStatus: "accepted" },
+  { id: "rx3", drug: "Salbutamol Inhaler", form: "Inhaler", quantity: "1", prescribedBy: "Dr. Amara Okafor", datePrescribed: "Jul 21, 2026", pharmacy: "GreenCross Pharmacy", fulfillmentStatus: "ready" },
+  { id: "rx4", drug: "Amoxicillin 500 mg", form: "Capsule", quantity: "21", prescribedBy: "Dr. Priya Nair", datePrescribed: "Jul 20, 2026", pharmacy: "MedPlus Pharmacy", fulfillmentStatus: "rejected", fulfillmentNote: "Out of stock — expecting resupply Thursday." },
 ];

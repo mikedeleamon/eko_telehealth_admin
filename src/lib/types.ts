@@ -129,6 +129,22 @@ export type ComplaintCategory = "billing" | "appointment" | "provider" | "techni
 export type ComplaintStatus = "pending" | "resolved" | "dismissed";
 
 /**
+ * A chat message the anti-disintermediation filter masked. `originalText` is
+ * admin-only — neither participant can see it — and exists so a complaint about
+ * an off-platform approach can be moderated against what was actually said.
+ */
+export interface RedactedMessage {
+  id: string;
+  conversationId: string;
+  senderName: string;
+  senderAccountType: "Patient" | "Doctor" | "Provider" | "Admin";
+  counterpartyName?: string;
+  maskedText: string;
+  originalText: string;
+  sentAt: string;
+}
+
+/**
  * A report a patient or doctor filed via the app's Settings → Report a
  * Problem (task 2.1). A trackable alternative to a static "contact us" —
  * this has a real lifecycle the admin manages and the filer sees resolved.
@@ -194,4 +210,39 @@ export interface PromoCode {
   expiresAt: string | null;
   active: boolean;
   redemptions: number;
+}
+
+/** A provider withdrawal and its state on the payment rail (GET /admin/payouts). */
+export interface AdminPayout {
+  id: string;
+  provider: string;
+  /** Formatted NGN, e.g. "₦45,000". */
+  amount: string;
+  rail: "flutterwave_bank" | "paypal";
+  /** queued → handed to the rail; processing → awaiting its webhook; paid/failed are terminal. */
+  status: "queued" | "processing" | "paid" | "failed";
+  /** Masked, snapshotted at payout time — e.g. "GTBank ••••4321". */
+  destination: string;
+  reference: string;
+  providerReference?: string;
+  failureReason?: string;
+  /** What actually left the account; only differs from `amount` on PayPal, which can't settle NGN. */
+  sent?: string;
+  requestedAt: string;
+}
+
+export type FulfillmentStatus = "none" | "sent" | "accepted" | "ready" | "collected" | "rejected";
+
+/** A prescription referred to a directory pharmacy (GET /admin/prescriptions). */
+export interface AdminPrescription {
+  id: string;
+  drug: string;
+  form: string;
+  quantity: string;
+  instructions?: string;
+  prescribedBy: string;
+  datePrescribed: string;
+  pharmacy: string;
+  fulfillmentStatus: FulfillmentStatus;
+  fulfillmentNote?: string;
 }

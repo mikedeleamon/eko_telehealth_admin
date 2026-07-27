@@ -10,7 +10,10 @@ import {
   MOCK_CURRENCIES,
   MOCK_PLATFORM_SETTINGS,
   MOCK_PROMO_CODES,
+  MOCK_PAYOUTS,
+  MOCK_ADMIN_PRESCRIPTIONS,
   MOCK_PROVIDER_APPLICATIONS,
+  MOCK_REDACTED_MESSAGES,
   MOCK_REVIEWS,
   MOCK_STATS,
   MOCK_USERS,
@@ -25,7 +28,11 @@ import type {
   PlatformSettings,
   PromoCode,
   ProviderApplication,
+  RedactedMessage,
   Review,
+  AdminPayout,
+  AdminPrescription,
+  FulfillmentStatus,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -176,6 +183,58 @@ export const api = {
     await request(`/admin/users/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
   },
 
+  /** GET /admin/payouts — provider withdrawal queue, newest first. */
+  async payouts(): Promise<AdminPayout[]> {
+    if (USE_MOCK) return delay().then(() => MOCK_PAYOUTS);
+    return request("/admin/payouts");
+  },
+
+  /** POST /admin/payouts/:id/retry — re-send a failed payout on a fresh idempotency reference. */
+  async retryPayout(id: string): Promise<void> {
+    if (USE_MOCK) {
+      return delay(300).then(() => {
+        const p = MOCK_PAYOUTS.find((x) => x.id === id);
+        if (p) { p.status = "processing"; p.failureReason = undefined; }
+      });
+    }
+    await request(`/admin/payouts/${id}/retry`, { method: "POST" });
+  },
+
+  /** POST /admin/payouts/:id/mark-paid — manual escape hatch when a webhook never arrived. */
+  async markPayoutPaid(id: string): Promise<void> {
+    if (USE_MOCK) {
+      return delay(300).then(() => {
+        const p = MOCK_PAYOUTS.find((x) => x.id === id);
+        if (p) { p.status = "paid"; p.failureReason = undefined; }
+      });
+    }
+    await request(`/admin/payouts/${id}/mark-paid`, { method: "POST" });
+  },
+
+  /** GET /admin/prescriptions — pharmacy referral queue (SOW 1.7). */
+  async prescriptions(): Promise<AdminPrescription[]> {
+    if (USE_MOCK) return delay().then(() => MOCK_ADMIN_PRESCRIPTIONS);
+    return request("/admin/prescriptions");
+  },
+
+  /**
+   * PATCH /admin/prescriptions/:id/fulfillment — advance a referral on the
+   * pharmacy's behalf. Batch 3 locked "no pharmacy dashboard", so an ops
+   * admin works this queue; the same endpoint serves a pharmacy login later.
+   */
+  async updateFulfillment(id: string, status: FulfillmentStatus, note?: string): Promise<void> {
+    if (USE_MOCK) {
+      return delay(250).then(() => {
+        const rx = MOCK_ADMIN_PRESCRIPTIONS.find((p) => p.id === id);
+        if (rx) { rx.fulfillmentStatus = status; rx.fulfillmentNote = note; }
+      });
+    }
+    await request(`/admin/prescriptions/${id}/fulfillment`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, note }),
+    });
+  },
+
   /** GET /admin/appointments */
   async appointments(): Promise<AdminAppointment[]> {
     if (USE_MOCK) return delay().then(() => MOCK_ADMIN_APPOINTMENTS);
@@ -223,6 +282,12 @@ export const api = {
       });
     }
     return request(`/admin/promos/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  },
+
+  /** GET /admin/messages/redacted — masked chat messages, with the originals. */
+  async redactedMessages(): Promise<RedactedMessage[]> {
+    if (USE_MOCK) return delay().then(() => [...MOCK_REDACTED_MESSAGES]);
+    return request("/admin/messages/redacted");
   },
 
   /** GET /admin/complaints?status=pending */

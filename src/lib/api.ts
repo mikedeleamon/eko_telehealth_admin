@@ -15,8 +15,10 @@ import {
   MOCK_PROVIDER_APPLICATIONS,
   MOCK_REDACTED_MESSAGES,
   MOCK_REVIEWS,
+  MOCK_SUPPORT_MESSAGES,
   MOCK_STATS,
   MOCK_USERS,
+  mockRevenue,
 } from "./mock";
 import type {
   AdminAppointment,
@@ -29,7 +31,10 @@ import type {
   PromoCode,
   ProviderApplication,
   RedactedMessage,
+  RevenueAnalysis,
+  RevenueGranularity,
   Review,
+  SupportMessage,
   AdminPayout,
   AdminPrescription,
   FulfillmentStatus,
@@ -59,6 +64,29 @@ export const api = {
   async stats(): Promise<DashboardStats> {
     if (USE_MOCK) return delay().then(() => MOCK_STATS);
     return request("/admin/stats");
+  },
+
+  /**
+   * GET /admin/revenue — the trend and breakdown behind the dashboard's single
+   * revenue figure (SOW/BRD 1.18). Omitting the range asks for the current
+   * calendar month, matching what /admin/stats reports.
+   */
+  async revenue(params: { from?: string; to?: string; granularity?: RevenueGranularity } = {}): Promise<RevenueAnalysis> {
+    if (USE_MOCK) {
+      const now = new Date();
+      // Parsed as a LOCAL calendar date: `new Date("2026-07-01")` is UTC
+      // midnight, which is still June 30th anywhere west of Greenwich, and the
+      // chart would open on a day outside the range that was asked for.
+      const localDay = (value: string) =>
+        new Date(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)));
+      const from = params.from ? localDay(params.from) : new Date(now.getFullYear(), now.getMonth(), 1);
+      const to = params.to ? new Date(localDay(params.to).getTime() + 86_400_000) : new Date(now.getTime() + 86_400_000);
+      return delay().then(() => mockRevenue(from, to, params.granularity ?? "day"));
+    }
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => !!v) as [string, string][],
+    ).toString();
+    return request(`/admin/revenue${query ? `?${query}` : ""}`);
   },
 
   /** GET /admin/providers/applications */
@@ -294,6 +322,31 @@ export const api = {
   async complaints(): Promise<Complaint[]> {
     if (USE_MOCK) return delay().then(() => MOCK_COMPLAINTS.filter((c) => c.status === "pending"));
     return request("/admin/complaints?status=pending");
+  },
+
+  /** GET /admin/complaints/:id/messages — the support thread, oldest first. */
+  async complaintMessages(id: string): Promise<SupportMessage[]> {
+    if (USE_MOCK) return delay().then(() => MOCK_SUPPORT_MESSAGES.filter((m) => m.complaintId === id));
+    return request(`/admin/complaints/${id}/messages`);
+  },
+
+  /** POST /admin/complaints/:id/messages — reply to the filer. */
+  async replyToComplaint(id: string, body: string): Promise<SupportMessage> {
+    const message: SupportMessage = {
+      id: `sm-${Date.now()}`,
+      complaintId: id,
+      authorRole: "admin",
+      authorName: "Eko Admin",
+      body,
+      createdAt: new Date().toISOString(),
+    };
+    if (USE_MOCK) {
+      return delay(200).then(() => {
+        MOCK_SUPPORT_MESSAGES.push(message);
+        return message;
+      });
+    }
+    return request(`/admin/complaints/${id}/messages`, { method: "POST", body: JSON.stringify({ body }) });
   },
 
   /** POST /admin/complaints/:id/decision */

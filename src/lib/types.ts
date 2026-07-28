@@ -98,6 +98,46 @@ export const APPOINTMENT_STATUS_BADGE_VARIANT: Record<AdminAppointment["status"]
   cancelled: "red",
 };
 
+/**
+ * GET /admin/revenue — platform revenue over a date range (SOW/BRD 1.18).
+ *
+ * Distinct from DashboardStats.revenueThisMonth, which is a single figure for
+ * the current month. This is the analysis behind it: a trend, a comparison
+ * with the preceding period, and where the money came from.
+ *
+ * Money definitions follow the backend's lib/pricing.ts exactly —
+ * platformRevenue is service charge + commission − discount, and VAT is
+ * reported separately because it is a liability owed onward, not income.
+ */
+export type RevenueGranularity = "day" | "week" | "month";
+
+export interface RevenueAnalysis {
+  range: { from: string; to: string; granularity: RevenueGranularity };
+  totals: {
+    gross: number;
+    consultationFees: number;
+    serviceCharge: number;
+    commission: number;
+    discount: number;
+    vat: number;
+    platformRevenue: number;
+    providerPayout: number;
+    visits: number;
+  };
+  previous: {
+    platformRevenue: number;
+    gross: number;
+    visits: number;
+    /** Null when the preceding period had nothing to compare against. */
+    platformRevenueChangePct: number | null;
+    grossChangePct: number | null;
+  };
+  series: { bucket: string; label: string; platformRevenue: number; gross: number; visits: number }[];
+  byVisitType: { type: string; gross: number; platformRevenue: number; visits: number }[];
+  byGateway: { gateway: string; gross: number; platformRevenue: number; visits: number }[];
+  topProviders: { doctorId: string; name: string; gross: number; platformRevenue: number; visits: number }[];
+}
+
 export interface DashboardStats {
   totalPatients: number;
   activeProviders: number;
@@ -160,6 +200,23 @@ export interface Complaint {
   status: ComplaintStatus;
   resolutionNote?: string;
   submittedAt: string;
+  /** ISO timestamp of the latest message in the support thread, if any. */
+  lastMessageAt?: string;
+  /** Messages from the filer that support hasn't read yet. */
+  unread?: number;
+}
+
+/**
+ * One message in a support thread. A report is also a conversation with the
+ * filer — `authorRole` is which side wrote it.
+ */
+export interface SupportMessage {
+  id: string;
+  complaintId: string;
+  authorRole: "user" | "admin";
+  authorName: string;
+  body: string;
+  createdAt: string;
 }
 
 /**

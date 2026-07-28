@@ -11,7 +11,10 @@ import type {
   PromoCode,
   ProviderApplication,
   RedactedMessage,
+  RevenueAnalysis,
+  RevenueGranularity,
   Review,
+  SupportMessage,
 } from "./types";
 
 export const MOCK_STATS: DashboardStats = {
@@ -24,6 +27,97 @@ export const MOCK_STATS: DashboardStats = {
   pendingReviews: 3,
   pendingComplaints: 2,
 };
+
+/**
+ * Demo data for the revenue analysis page (SOW 1.18). Generated rather than
+ * hand-written so the series always covers the range being asked for and the
+ * chart has real shape to it — a hardcoded month of figures would go stale and
+ * fall outside every preset the moment the calendar moved on.
+ */
+export function mockRevenue(
+  from: Date,
+  to: Date,
+  granularity: RevenueGranularity,
+): RevenueAnalysis {
+  const buckets: { bucket: string; label: string }[] = [];
+  const key = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const cursor = new Date(from);
+  if (granularity === "month") cursor.setDate(1);
+  if (granularity === "week") cursor.setDate(cursor.getDate() - ((cursor.getDay() + 6) % 7));
+
+  while (cursor.getTime() < to.getTime()) {
+    const k = key(cursor);
+    const label =
+      granularity === "month"
+        ? cursor.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        : granularity === "week"
+          ? `Wk of ${cursor.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+          : cursor.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    buckets.push({ bucket: k, label });
+    if (granularity === "month") cursor.setMonth(cursor.getMonth() + 1);
+    else cursor.setDate(cursor.getDate() + (granularity === "week" ? 7 : 1));
+  }
+
+  // Deterministic per-bucket variation: a seeded wobble, not Math.random, so
+  // the page doesn't redraw a different "history" on every refetch.
+  const seeded = (i: number) => ((Math.sin(i * 12.9898) * 43758.5453) % 1 + 1) % 1;
+  const scale = granularity === "day" ? 1 : granularity === "week" ? 6 : 26;
+
+  const series = buckets.map((b, i) => {
+    const visits = Math.round((2 + seeded(i) * 5) * scale);
+    const gross = visits * 15_000;
+    return { ...b, visits, gross, platformRevenue: Math.round(gross * 0.175) };
+  });
+
+  const totals = series.reduce(
+    (acc, s) => ({
+      ...acc,
+      gross: acc.gross + s.gross,
+      consultationFees: acc.consultationFees + Math.round(s.gross * 0.93),
+      commission: acc.commission + s.platformRevenue,
+      vat: acc.vat + Math.round(s.gross * 0.07),
+      platformRevenue: acc.platformRevenue + s.platformRevenue,
+      providerPayout: acc.providerPayout + (s.gross - s.platformRevenue),
+      visits: acc.visits + s.visits,
+    }),
+    { gross: 0, consultationFees: 0, serviceCharge: 0, commission: 0, discount: 0, vat: 0, platformRevenue: 0, providerPayout: 0, visits: 0 },
+  );
+
+  const split = (share: number) => ({
+    gross: Math.round(totals.gross * share),
+    platformRevenue: Math.round(totals.platformRevenue * share),
+    visits: Math.round(totals.visits * share),
+  });
+
+  return {
+    range: { from: from.toISOString(), to: to.toISOString(), granularity },
+    totals,
+    previous: {
+      platformRevenue: Math.round(totals.platformRevenue * 0.86),
+      gross: Math.round(totals.gross * 0.86),
+      visits: Math.round(totals.visits * 0.86),
+      platformRevenueChangePct: 16.3,
+      grossChangePct: 16.3,
+    },
+    series,
+    byVisitType: [
+      { type: "Video Visit", ...split(0.62) },
+      { type: "Clinic Visit", ...split(0.23) },
+      { type: "Home Visit", ...split(0.15) },
+    ],
+    byGateway: [
+      { gateway: "flutterwave", ...split(0.78) },
+      { gateway: "paypal", ...split(0.22) },
+    ],
+    topProviders: [
+      { doctorId: "doc-1", name: "Dr. Amara Okafor", ...split(0.28) },
+      { doctorId: "doc-2", name: "Dr. Sarah Johnson", ...split(0.21) },
+      { doctorId: "doc-3", name: "Dr. Emeka Nwachukwu", ...split(0.16) },
+      { doctorId: "doc-4", name: "Nurse Blessing Ade", ...split(0.11) },
+    ],
+  };
+}
 
 export const MOCK_PLATFORM_SETTINGS: PlatformSettings = {
   serviceChargePct: 0,
@@ -204,6 +298,29 @@ export const MOCK_REDACTED_MESSAGES: RedactedMessage[] = [
     maskedText: "Can you send the referral to [contact details removed] instead?",
     originalText: "Can you send the referral to ngozi.nwosu@gmail.com instead?",
     sentAt: "2026-07-23T16:02:00.000Z",
+  },
+];
+
+/**
+ * Support threads keyed by complaint (task #05) — the reply channel that turns
+ * the complaint queue into a conversation with the filer.
+ */
+export const MOCK_SUPPORT_MESSAGES: SupportMessage[] = [
+  {
+    id: "sm-1",
+    complaintId: "c1",
+    authorRole: "admin",
+    authorName: "Eko Admin",
+    body: "Thanks for flagging this \u2014 I can see two authorisations against your card for Jul 18. Checking with our payment provider now.",
+    createdAt: "2026-07-19T14:10:00.000Z",
+  },
+  {
+    id: "sm-2",
+    complaintId: "c1",
+    authorRole: "user",
+    authorName: "Martin Doe",
+    body: "Thank you. Only one visit actually happened, so the second one should not be there.",
+    createdAt: "2026-07-19T15:02:00.000Z",
   },
 ];
 

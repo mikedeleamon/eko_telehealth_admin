@@ -30,10 +30,14 @@ export default function DashboardPage() {
           <p className="text-3xl font-bold">{stats?.appointmentsThisWeek ?? "—"}</p>
           <p className="text-sm text-foreground/55 mt-1">Appointments this week</p>
         </Card>
-        <Card tint="pink">
-          <p className="text-3xl font-bold">{stats?.revenueThisMonth ?? "—"}</p>
-          <p className="text-sm text-foreground/55 mt-1">Revenue this month</p>
-        </Card>
+        {/* The month's figure links through to the analysis behind it — the
+            trend, the comparison and the breakdowns (SOW 1.18). */}
+        <Link href="/revenue">
+          <Card tint="pink" className="hover:shadow-md transition-shadow cursor-pointer">
+            <p className="text-3xl font-bold">{stats?.revenueThisMonth ?? "—"}</p>
+            <p className="text-sm text-foreground/55 mt-1">Revenue this month →</p>
+          </Card>
+        </Link>
         <Card>
           <p className="text-3xl font-bold">{stats?.vatCollected ?? "—"}</p>
           <p className="text-sm text-foreground/55 mt-1">VAT collected (owed, not revenue)</p>

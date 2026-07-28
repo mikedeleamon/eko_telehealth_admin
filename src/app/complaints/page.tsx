@@ -53,6 +53,9 @@ export default function ComplaintsPage() {
                       <p className="font-semibold">{complaint.subject}</p>
                       <Badge variant="accent">{CATEGORY_LABEL[complaint.category]}</Badge>
                       <Badge variant={complaint.accountType !== "Patient" ? "orange" : "gray"}>{complaint.accountType}</Badge>
+                      {!!complaint.unread && (
+                        <Badge variant="accent">{complaint.unread} new {complaint.unread === 1 ? "reply" : "replies"}</Badge>
+                      )}
                     </div>
                     <p className="text-sm text-foreground/55 mt-1">{complaint.authorName} · Submitted {complaint.submittedAt}</p>
                     <p className="text-sm text-foreground/70 mt-2 leading-relaxed">{complaint.description}</p>
@@ -61,6 +64,8 @@ export default function ComplaintsPage() {
                     <Badge variant={status === "resolved" ? "green" : "red"}>{status}</Badge>
                   )}
                 </div>
+
+                <SupportThread complaintId={complaint.id} />
 
                 {status === "pending" && (
                   <div className="mt-4 pt-4 border-t border-black/5">
@@ -98,6 +103,96 @@ export default function ComplaintsPage() {
           {data.length === 0 && <p className="text-sm text-foreground/50">No pending reports.</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The reply channel that makes a report a conversation rather than a queue
+ * entry. Collapsed by default: most reports are read and decided without ever
+ * needing a back-and-forth, and expanding every thread would bury the decision
+ * buttons under transcripts.
+ */
+function SupportThread({ complaintId }: { complaintId: string }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+  const { data: messages } = useQuery({
+    queryKey: ["complaint-messages", complaintId],
+    queryFn: () => api.complaintMessages(complaintId),
+    enabled: open,
+  });
+
+  const reply = useMutation({
+    mutationFn: (body: string) => api.replyToComplaint(complaintId, body),
+    onSuccess: () => {
+      setDraft("");
+      qc.invalidateQueries({ queryKey: ["complaint-messages", complaintId] });
+      // A reply bumps last_message_at, which the queue orders on.
+      qc.invalidateQueries({ queryKey: ["complaints"] });
+    },
+  });
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-3 text-sm font-medium text-accent hover:underline underline-offset-4"
+      >
+        Open conversation
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-black/5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">Conversation</p>
+        <button onClick={() => setOpen(false)} className="text-xs text-foreground/50 hover:text-foreground">
+          Hide
+        </button>
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {!messages ? (
+          <p className="text-sm text-foreground/50">Loading…</p>
+        ) : messages.length === 0 ? (
+          <p className="text-sm text-foreground/50">No replies yet — the report above is the whole thread.</p>
+        ) : (
+          messages.map((m) => (
+            <div
+              key={m.id}
+              className={`rounded-lg px-3 py-2 text-sm ${
+                m.authorRole === "admin" ? "bg-accent/10 ml-8" : "bg-black/[0.04] mr-8"
+              }`}
+            >
+              <p className="text-xs font-semibold text-foreground/60">
+                {m.authorName} · {new Date(m.createdAt).toLocaleString()}
+              </p>
+              <p className="mt-1 leading-relaxed">{m.body}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-3 flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && draft.trim()) reply.mutate(draft.trim());
+          }}
+          placeholder="Reply to the filer…"
+          className="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+        />
+        <button
+          onClick={() => draft.trim() && reply.mutate(draft.trim())}
+          disabled={!draft.trim() || reply.isPending}
+          className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 }
